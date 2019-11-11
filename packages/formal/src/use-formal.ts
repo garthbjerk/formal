@@ -1,16 +1,13 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import isEqual from 'react-fast-compare'
+import { FormalConfig, FormalErrors, FormalState } from './types'
+import { formatYupErrors, objectIsEmpty, schemaHasAsyncValidation } from './utils'
 
-import { FormalConfig, FormalState, FormalErrors } from './types'
-import {
-  objectIsEmpty,
-  schemaHasAsyncValidation,
-  formatYupErrors,
-} from './utils'
 
 export default function useFormal<Schema>(
   initialValues: Schema,
-  { schema, onSubmit }: FormalConfig<Schema>
+  { schema, onSubmit }: FormalConfig<Schema>,
+  enableReinitialize = false,
 ): FormalState<Schema> {
   const [lastValues, setLastValues] = useState<Schema>(initialValues)
   const [values, setValues] = useState<Schema>(initialValues)
@@ -20,6 +17,9 @@ export default function useFormal<Schema>(
   const [isValidating, setIsValidating] = useState<boolean>(false)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false)
+
+  const refInitialValues = useRef(initialValues)
+  const isMounted = useRef<boolean>(false)
 
   const isDirty = useMemo(() => !isEqual(lastValues, values), [
     lastValues,
@@ -72,6 +72,17 @@ export default function useFormal<Schema>(
     setValues(lastValues)
     clearErrors()
   }, [clearErrors, lastValues])
+
+  useEffect(() => {
+    if (
+      enableReinitialize && 
+      isMounted.current === true && 
+      !isEqual(refInitialValues.current, initialValues)
+    ) {
+      refInitialValues.current = initialValues
+      reset()
+    }
+  }, [enableReinitialize, initialValues, reset])
 
   const submit = useCallback(async () => {
     if (schema) {
