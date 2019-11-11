@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import isEqual from 'react-fast-compare'
 
 import { FormalConfig, FormalState, FormalErrors } from './types'
@@ -20,6 +20,16 @@ export default function useFormal<Schema>(
   const [isValidating, setIsValidating] = useState<boolean>(false)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false)
+
+  const isMounted = useRef<boolean>(false)
+
+  useEffect(() => {
+    isMounted.current = true
+
+    return () => {
+      isMounted.current = false
+    }
+  }, [])
 
   const isDirty = useMemo(() => !isEqual(lastValues, values), [
     lastValues,
@@ -84,9 +94,13 @@ export default function useFormal<Schema>(
 
     setIsSubmitting(true)
     await onSubmit(values)
-    setLastValues(values)
-    setIsSubmitted(true)
-    setIsSubmitting(false)
+
+    // Make sure Formal is still mounted before setting state
+    if (isMounted) {
+      setLastValues(values)
+      setIsSubmitted(true)
+      setIsSubmitting(false)
+    }
   }, [schema, validate, onSubmit, values])
 
   const getFieldProps = useCallback(
