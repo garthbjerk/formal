@@ -5,9 +5,10 @@ import { FormalWebState, FormalWebTextFieldEvent } from './types'
 
 export default function useFormalWeb<Schema>(
   initialValues: Schema,
-  config: FormalConfig<Schema>
+  config: FormalConfig<Schema>,
+  enableReinitialize = false,
 ): FormalWebState<Schema> {
-  const formal = useFormal(initialValues, config)
+  const formal = useFormal(initialValues, config, enableReinitialize)
 
   const getFormProps = useCallback(
     () => ({

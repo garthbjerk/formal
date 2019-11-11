@@ -5,9 +5,10 @@ import { FormalNativeState } from './types'
 
 export default function useFormalNative<Schema>(
   initialValues: Schema,
-  config: FormalConfig<Schema>
+  config: FormalConfig<Schema>,
+  enableReinitialize = false,
 ): FormalNativeState<Schema> {
-  const formal = useFormal(initialValues, config)
+  const formal = useFormal(initialValues, config, enableReinitialize)
 
   const getFormProps = useCallback(() => {
     throw new Error('formal.getFormProps() is not supported on React Native')
